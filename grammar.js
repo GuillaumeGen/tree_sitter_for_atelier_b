@@ -1,3 +1,4 @@
+
 module.exports = grammar({
   name: 'B_language',
 
@@ -21,22 +22,22 @@ module.exports = grammar({
     ),
 
     clause_machine_abstract: $ => choice(
-      clause_constraints,
-      clause_sees,
-      clause_includes,
-      clause_promotes,
-      clause_extends,
-      clause_uses,
-      clause_sets,
-      clause_concrete_constants,
-      clause_abstract_constants,
-      clause_properties,
-      clause_concrete_variables,
-      clause_abstract_variables,
-      clause_invariant,
-      clause_assertions,
-      clause_initialization,
-      clause_operations
+      $.clause_constraints,
+      $.clause_sees,
+      $.clause_includes,
+      $.clause_promotes,
+      $.clause_extends,
+      $.clause_uses,
+      $.clause_sets,
+      $.clause_concrete_constants,
+      $.clause_abstract_constants,
+      $.clause_properties,
+      $.clause_concrete_variables,
+      $.clause_abstract_variables,
+      $.clause_invariant,
+      $.clause_assertions,
+      $.clause_initialization,
+      $.clause_operations
     ),
 
     header: $ => seq(
@@ -60,20 +61,20 @@ module.exports = grammar({
     ),
 
     clause_refinement: $ => choice(
-      clause_sees,
-      clause_includes,
-      clause_promotes,
-      clause_extends,
-      clause_sets,
-      clause_concrete_constants,
-      clause_abstract_constants,
-      clause_properties,
-      clause_concrete_variables,
-      clause_abstract_variables,
-      clause_invariant,
-      clause_assertions,
-      clause_initialization,
-      clause_operations
+      $.clause_sees,
+      $.clause_includes,
+      $.clause_promotes,
+      $.clause_extends,
+      $.clause_sets,
+      $.clause_concrete_constants,
+      $.clause_abstract_constants,
+      $.clause_properties,
+      $.clause_concrete_variables,
+      $.clause_abstract_variables,
+      $.clause_invariant,
+      $.clause_assertions,
+      $.clause_initialization,
+      $.clause_operations
     ),
 
     implementation: $ => seq(
@@ -85,27 +86,24 @@ module.exports = grammar({
     ),
 
     clause_implementation: $ => choice(
-      clause_sees,
-      clause_imports,
-      clause_promotes,
-      clause_extends_B0,
-      clause_sets,
-      clause_concrete_constants,
-      clause_properties,
-      clause_values,
-      clause_concrete_variables,
-      clause_invariant,
-      clause_assertions,
-      clause_initialization_B0,
-      clause_operations_B0
+      $.clause_sees,
+      $.clause_imports,
+      $.clause_promotes,
+      $.clause_extends_B0,
+      $.clause_sets,
+      $.clause_concrete_constants,
+      $.clause_properties,
+      $.clause_values,
+      $.clause_concrete_variables,
+      $.clause_invariant,
+      $.clause_assertions,
+      $.clause_initialization_B0,
+      $.clause_operations_B0
     ),
 
     clause_constraints: $ => seq(
       "CONSTRAINTS",
-      separated_seq(
-        "&",
-        $.identpredicate
-      )
+      $.predicate
     ),
 
     clause_refines: $ => seq(
@@ -123,14 +121,14 @@ module.exports = grammar({
             "."
           )),
           $.ident,
-          optional(
+          optional(seq(
             "(",
             separated_seq(
               ",",
               $.instanciation_B0
             ),
             ")"
-          )
+          ))
         )
       )
     ),
@@ -138,7 +136,7 @@ module.exports = grammar({
     instanciation_B0: $ => choice(
       $.term,
       $.number_set_B0,
-      $.bool,
+      "BOOL",
       $.interval
     ),
 
@@ -158,27 +156,26 @@ module.exports = grammar({
       separated_seq(
         ",",
         seq(
+          separated_seq(
+            ".",
+            $.ident
+          ),
           optional(seq(
-            $.ident,
-            "."
-          )),
-          $.ident,
-          optional(
             "(",
             separated_seq(
               ",",
               $.instanciation
             ),
             ")"
-          )
+          ))
         )
       )
     ),
 
     instanciation: $ => choice(
-      $.terme,
+      $.term,
       $.number_set,
-      "BOOL",
+      prec.left(10, "BOOL"),
       $.interval
     ),
 
@@ -203,14 +200,14 @@ module.exports = grammar({
             "."
           )),
           $.ident,
-          optional(
+          optional(seq(
             "(",
             separated_seq(
               ",",
-              $.instantiating
+              $.instanciation
             ),
             ")"
-          )
+          ))
         )
       )
     ),
@@ -225,14 +222,14 @@ module.exports = grammar({
             "."
           )),
           $.ident,
-          optional(
+          optional(seq(
             "(",
             separated_seq(
               ",",
-              $.instanciing_B0
+              $.instanciation_B0
             ),
             ")"
-          )
+          ))
         )
       )
     ),
@@ -294,10 +291,7 @@ module.exports = grammar({
 
     clause_properties: $ => seq(
       "PROPERTIES",
-      separated_seq(
-        "&",
-        $.predicate
-      )
+      $.predicate
     ),
 
     clause_values: $ => seq(
@@ -314,7 +308,7 @@ module.exports = grammar({
       choice(
         $.term,
         seq(
-          "Bool",
+          "bool",
           "(",
           $.condition,
           ")"
@@ -348,10 +342,7 @@ module.exports = grammar({
 
     clause_invariant: $ => seq(
       "INVARIANT",
-      separated_seq(
-        "&",
-        $.predicate
-      )
+      $.predicate
     ),
 
     clause_assertions: $ => seq(
@@ -462,26 +453,40 @@ module.exports = grammar({
 
     arithmetical_expression: $ => choice(
       $.integer_lit,
-      separated_seq(
-        ".",
-        $.ident
-      ),
-      seq(
+      prec.left(180,seq(
         $.arithmetical_expression,
-        choice(
-          "+",
-          "-",
-          "*",
-          "/",
-          "mod",
-          "**"
-        ),
+        "+",
         $.arithmetical_expression
-      ),
-      seq(
+      )),
+      prec.left(180,seq(
+        $.arithmetical_expression,
         "-",
         $.arithmetical_expression
-      ),
+      )),
+      prec.left(190,seq(
+        $.arithmetical_expression,
+        "*",
+        $.arithmetical_expression
+      )),
+      prec.left(190,seq(
+        $.arithmetical_expression,
+        "/",
+        $.arithmetical_expression
+      )),
+      prec.left(190,seq(
+        $.arithmetical_expression,
+        "mod",
+        $.arithmetical_expression
+      )),
+      prec.right(200,seq(
+        $.arithmetical_expression,
+        "**",
+        $.arithmetical_expression
+      )),
+      prec(210,seq(
+        "-",
+        $.arithmetical_expression
+      )),
       seq(
         choice(
           "succ",
@@ -492,6 +497,19 @@ module.exports = grammar({
         ),
         "(",
         $.arithmetical_expression,
+        ")"
+      ),
+      seq(
+        choice(
+          "SIGMA",
+          "PI"
+        ),
+        $.list_ident,
+        ".",
+        "(",
+        $.predicate,
+        "|",
+        $.expression,
         ")"
       )
     ),
@@ -547,7 +565,7 @@ module.exports = grammar({
         "..",
         $.arithmetical_expression
       ),
-      number_set_B0
+      $.number_set_B0
     ),
 
     number_set_B0: $ => choice(
@@ -558,30 +576,52 @@ module.exports = grammar({
 
     // Condidtions
     condition: $ => choice(
-      seq(
+      prec.left(60, seq(
         $.simple_term,
-        choice(
-          "=",
-          "/=",
-          "<",
-          ">",
-          "<=",
-          ">="
-        ),
+        "=",
         $.simple_term
-      ),
-      seq(
+      )),
+      prec.left(160, seq(
+        $.simple_term,
+        "/=",
+        $.simple_term
+      )),
+      prec.left(160, seq(
+        $.simple_term,
+        "<=",
+        $.simple_term
+      )),
+      prec.left(160, seq(
+        $.simple_term,
+        "<",
+        $.simple_term
+      )),
+      prec.left(160, seq(
+        $.simple_term,
+        ">=",
+        $.simple_term
+      )),
+      prec.left(160, seq(
+        $.simple_term,
+        ">",
+        $.simple_term
+      )),
+      prec.left(40,seq(
         $.condition,
-        choice(
-          "&",
-          "or"
-        ),
+        "&",
         $.condition
-      ),
-      "not",
-      "(",
-      $.condition,
-      ")"
+      )),
+      prec.left(40,seq(
+        $.condition,
+        "or",
+        $.condition
+      )),
+      seq(
+        "not",
+        "(",
+        $.condition,
+        ")"
+      )
     ),
 
     // Instructions
@@ -625,14 +665,14 @@ module.exports = grammar({
           ".",
           $.ident
         ),
-        optional(
+        optional(seq(
           "(",
           separated_seq(
             ",",
             $.term
           ),
           ")"
-        ),
+        )),
         ":=",
         $.term
       ),
@@ -737,6 +777,14 @@ module.exports = grammar({
       "END"
     ),
 
+    assert_instruction: $ => seq(
+      "ASSERT",
+      $.predicate,
+      "THEN",
+      $.instruction,
+      "END"
+    ),
+
     // Predicates
     predicate: $ => choice(
       seq(
@@ -750,17 +798,27 @@ module.exports = grammar({
         $.predicate,
         ")"
       ),
-      seq(
+      prec.left(40,seq(
         $.predicate,
-        choice(
-          "&",
-          "or",
-          "=>",
-          "<=>"
-        ),
+        "&",
         $.predicate
-      ),
-      seq(
+      )),
+      prec.left(40,seq(
+        $.predicate,
+        "or",
+        $.predicate
+      )),
+      prec.left(30,seq(
+        $.predicate,
+        "=>",
+        $.predicate
+      )),
+      prec.left(60,seq(
+        $.predicate,
+        "<=>",
+        $.predicate
+      )),
+      prec(250,seq(
         "!",
         $.list_ident,
         ".",
@@ -769,40 +827,82 @@ module.exports = grammar({
         "=>",
         $.predicate,
         ")"
-      ),
-      seq(
+      )),
+      prec(250,seq(
         "#",
         $.list_ident,
         ".",
         "(",
         $.predicate,
         ")"
-      ),
-      seq(
+      )),
+      prec.left(60, seq(
         $.expression,
-        choice(
-          "=",
-          "/=",
-          ":",
-          "/:",
-          "<:",
-          "<<:",
-          "/<:",
-          "/<<:",
-          "<=",
-          "<",
-          ">=",
-          ">"
-        ),
+        "=",
         $.expression
-      )
+      )),
+      prec.left(160, seq(
+        $.expression,
+        "/=",
+        $.expression
+      )),
+      prec.left(60, seq(
+        $.expression,
+        ":",
+        $.expression
+      )),
+      prec.left(160, seq(
+        $.expression,
+        "/:",
+        $.expression
+      )),
+      prec.left(110, seq(
+        $.expression,
+        "<:",
+        $.expression
+      )),
+      prec.left(110, seq(
+        $.expression,
+        "<<:",
+        $.expression
+      )),
+      prec.left(110, seq(
+        $.expression,
+        "/<:",
+        $.expression
+      )),
+      prec.left(110, seq(
+        $.expression,
+        "/<<:",
+        $.expression
+      )),
+      prec.left(160, seq(
+        $.expression,
+        "<=",
+        $.expression
+      )),
+      prec.left(160, seq(
+        $.expression,
+        "<",
+        $.expression
+      )),
+      prec.left(160, seq(
+        $.expression,
+        ">=",
+        $.expression
+      )),
+      prec.left(160, seq(
+        $.expression,
+        ">",
+        $.expression
+      )),
     ),
 
     // Expressions
     expression: $ => choice(
       $.expression_primary,
       $.expression_boolean,
-      $.expression_arithmetical,
+      $.arithmetical_expression,
       $.expression_of_couples,
       $.expression_of_sets,
       $.construction_of_sets,
@@ -823,74 +923,14 @@ module.exports = grammar({
       $.conversion_bool
     ),
 
-    expression_arithmetical: $ => choice(
-      $.integer_lit,
-      seq(
-        $.expression,
-        choice(
-          "+",
-          "-",
-          "*",
-          "/",
-          "mod",
-          "**"
-        ),
-        $.expression
-      ),
-      seq(
-        "-",
-        $.expression
-      ),
-      seq(
-        choice(
-          "succ",
-          "pred"
-        ),
-        optional(seq(
-          "(",
-          $.expression,
-          ")"
-        ))
-      ),
-      seq(
-        choice(
-          "max",
-          "min",
-          "card",
-          "floor",
-          "ceiling",
-          "real"
-        ),
-        "(",
-        $.expression,
-        ")"
-      ),
-      seq(
-        choice(
-          "SIGMA",
-          "PI"
-        ),
-        $.list_ident,
-        ".",
-        "(",
-        separated_seq(
-          "&",
-          $.predicate
-        ),
-        "|",
-        $.expression,
-        ")"
-      )
-    ),
-
-    expression_of_couples: $ => seq(
+    expression_of_couples: $ => prec.left(160,seq(
       $.expression,
       choice(
         "|->",
         ","
       ),
       $.expression
-    ),
+    )),
 
     expression_of_sets: $ => choice(
       seq(
@@ -907,7 +947,6 @@ module.exports = grammar({
       $.comprehension_set,
       $.subsets,
       $.finite_subsets,
-      $.set_extension,
       $.interval,
       $.difference,
       $.union,
@@ -933,10 +972,10 @@ module.exports = grammar({
       $.domain,
       $.range,
       $.image,
-      $.restriction,
-      $.antirestriction,
-      $.corestriction,
-      $.anticorestriction,
+      $.domain_restriction,
+      $.domain_substraction,
+      $.range_restriction,
+      $.range_substraction,
       $.overwrite
     ),
 
@@ -952,7 +991,6 @@ module.exports = grammar({
 
     construction_of_functions: $ => choice(
       $.lambda_expression,
-      $.function_constant,
       $.evaluation_function,
       $.transformed_function,
       $.transformed_relation
@@ -1015,7 +1053,726 @@ module.exports = grammar({
       "INT"
     ),
 
+    product: $ => prec.left(190,seq(
+      $.expression,
+      "*",
+      $.expression
+    )),
 
+    comprehension_set: $ => seq(
+      "{",
+      separated_seq(
+        ",",
+        $.ident
+      ),
+      optional(seq(
+        "|",
+        $.predicate
+      )),
+      "}"
+    ),
+
+    subsets: $ => seq(
+      choice(
+        "POW",
+        "POW1"
+      ),
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    finite_subsets: $ => seq(
+      choice(
+        "FIN",
+        "FIN1"
+      ),
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    interval: $ => prec.left(170,seq(
+      $.expression,
+      "..",
+      $.expression
+    )),
+
+    difference: $ => prec.left(180,seq(
+      $.expression,
+      "-",
+      $.expression
+    )),
+
+    union: $ => prec.left(160,seq(
+      $.expression,
+      "\\/",
+      $.expression
+    )),
+
+    intersection: $ => prec.left(160,seq(
+      $.expression,
+      "/\\",
+      $.expression
+    )),
+
+    generalized_union: $ => seq(
+      "union",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    generalized_intersection: $ => seq(
+      "inter",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    quantified_union: $ => seq(
+      "UNION",
+      $.list_ident,
+      ".",
+      "(",
+      $.predicate,
+      "|",
+      $.expression,
+      ")"
+    ),
+
+    quantified_intersection: $ => seq(
+      "INTER",
+      $.list_ident,
+      ".",
+      "(",
+      $.predicate,
+      "|",
+      $.expression,
+      ")"
+    ),
+
+    relations: $ => prec.left(125,seq(
+      $.expression,
+      "<->",
+      $.expression
+    )),
+
+    identity: $ => seq(
+      "id",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    reverse: $ => seq(
+      $.expression,
+      "~"
+    ),
+
+    first_projection: $ => seq(
+      "prj1",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    second_projection: $ => seq(
+      "prj2",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    composition: $ => prec.left(20,seq(
+      $.expression,
+      ";",
+      $.expression
+    )),
+
+    direct_product: $ => prec.left(160,seq(
+      $.expression,
+      "><",
+      $.expression
+    )),
+
+    parallel_product: $ => prec.left(20,seq(
+      $.expression,
+      "||",
+      $.expression
+    )),
+
+    iteration: $ => seq(
+      "iterate",
+      "(",
+      $.expression,
+      ",",
+      $.expression,
+      ")"
+    ),
+
+    reflexive_closure: $ => seq(
+      "closure",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    closure: $ => seq(
+      "closure1",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    domain: $ => seq(
+      "dom",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    range: $ => seq(
+      "ran",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    image: $ => seq(
+      $.expression,
+      "[",
+      $.expression,
+      "]"
+    ),
+
+    domain_restriction: $ => prec.left(160,seq(
+      $.expression,
+      "<|",
+      $.expression
+    )),
+
+    domain_substraction: $ => prec.left(160,seq(
+      $.expression,
+      "<<|",
+      $.expression
+    )),
+
+    range_restriction: $ => prec.left(160,seq(
+      $.expression,
+      "|>",
+      $.expression
+    )),
+
+    range_substraction: $ => prec.left(160,seq(
+      $.expression,
+      "|>>",
+      $.expression
+    )),
+
+    overwrite: $ => prec.left(160,seq(
+      $.expression,
+      "<+",
+      $.expression
+    )),
+
+    partial_function: $ => prec.left(125,seq(
+      $.expression,
+      "+->",
+      $.expression
+    )),
+
+    total_function: $ => prec.left(125,seq(
+      $.expression,
+      "-->",
+      $.expression
+    )),
+
+    partial_injection: $ => prec.left(125,seq(
+      $.expression,
+      ">+>",
+      $.expression
+    )),
+
+    total_injection: $ => prec.left(125,seq(
+      $.expression,
+      ">->",
+      $.expression
+    )),
+
+    partial_surjection: $ => prec.left(125,seq(
+      $.expression,
+      "+->>",
+      $.expression
+    )),
+
+    total_surjection: $ => prec.left(125,seq(
+      $.expression,
+      "-->>",
+      $.expression
+    )),
+
+    total_bijection: $ => prec.left(125,seq(
+      $.expression,
+      ">->>",
+      $.expression
+    )),
+
+    lambda_expression: $ => prec(250,seq(
+      "%",
+      $.list_ident,
+      ".",
+      "(",
+      $.predicate,
+      "|",
+      $.expression,
+      ")"
+    )),
+
+    evaluation_function: $ => seq(
+      choice(
+        $.ident,
+        $.expr_bracketed
+      ),
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    transformed_function: $ => seq(
+      "fnc",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    transformed_relation: $ => seq(
+      "rel",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    sequences: $ => seq(
+      "seq",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    non_empty_sequences: $ => seq(
+      "seq1",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    injective_sequences: $ => seq(
+      "iseq",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    non_empty_inj_sequences: $ => seq(
+      "iseq1",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    permutations: $ => seq(
+      "perm",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    empty_sequences: $ => seq(
+      "[",
+      "]"
+    ),
+
+    sequence_extension: $ => seq(
+      "[",
+      separated_seq(
+        ",",
+        $.expression
+      ),
+      "]"
+    ),
+
+    sequence_size: $ => seq(
+      "size",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    sequence_first_element: $ => seq(
+      "first",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    sequence_last_element: $ => seq(
+      "last",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    head_sequence: $ => seq(
+      "front",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    queue_sequence: $ => seq(
+      "tail",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    reverse_sequence: $ => seq(
+      "rev",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    concatenation: $ => prec.left(160,seq(
+      $.expression,
+      "^",
+      $.expression
+    )),
+
+    insert_start: $ => prec.left(130,seq(
+      $.expression,
+      "->",
+      $.expression
+    )),
+
+    insert_tail: $ => prec.left(160,seq(
+      $.expression,
+      "<-",
+      $.expression
+    )),
+
+    restrict_head: $ => prec.left(160,seq(
+      $.expression,
+      "/|\\",
+      $.expression
+    )),
+
+    restrict_tail: $ => prec.left(160,seq(
+      $.expression,
+      "\\|/",
+      $.expression
+    )),
+
+    generalized_concat: $ => seq(
+      "conc",
+      "(",
+      $.expression,
+      ")"
+    ),
+
+    // Substitutions
+    substitution: $ => choice(
+      $.level1_substitution,
+      $.sequence_substitution,
+      $.simultaneous_substitution
+    ),
+
+    level1_substitution: $ => choice(
+      $.block_substitution,
+      $.identity_substitution,
+      $.becomes_equal_substitution,
+      $.precondition_substitution,
+      $.assertion_substitution,
+      $.choice_limited_substitution,
+      $.if_substitution,
+      $.select_substitution,
+      $.case_substitution,
+      $.any_substitution,
+      $.let_substitution,
+      $.becomes_elt_substitution,
+      $.becomes_such_that_substitution,
+      $.var_substitution,
+      $.call_up_substitution,
+      $.while_substitution
+    ),
+
+    block_substitution: $ => seq(
+      "BEGIN",
+      $.substitution,
+      "END"
+    ),
+
+    identity_substitution: $ => "skip",
+
+    becomes_equal_substitution: $ => choice(
+      seq(
+        separated_seq(
+          ",",
+          separated_seq(
+            ".",
+            $.ident
+          )
+        ),
+        ":=",
+        separated_seq(
+          ",",
+          $.expression
+        )
+      ),
+      seq(
+        separated_seq(
+          ".",
+          $.ident
+        ),
+        "(",
+        separated_seq(
+          ",",
+          $.expression
+        ),
+        ")",
+        ":=",
+        $.expression
+      )
+    ),
+
+    precondition_substitution: $ => seq(
+      "PRE",
+      $.predicate,
+      "THEN",
+      $.substitution,
+      "END"
+    ),
+
+    assertion_substitution: $ => seq(
+      "ASSERT",
+      $.predicate,
+      "THEN",
+      $.substitution,
+      "END"
+    ),
+
+    choice_limited_substitution: $ => seq(
+      "CHOICE",
+      $.substitution,
+      repeat(seq(
+        "OR",
+        $.substitution
+      )),
+      "END"
+    ),
+
+    if_substitution: $ => seq(
+      "IF",
+      $.predicate,
+      "THEN",
+      $.substitution,
+      repeat(seq(
+        "ELSIF",
+        $.predicate,
+        "THEN",
+        $.substitution
+      )),
+      optional(seq(
+        "ELSE",
+        $.substitution
+      )),
+      "END"
+    ),
+
+    select_substitution: $ => seq(
+      "SELECT",
+      $.predicate,
+      "THEN",
+      $.substitution,
+      repeat(seq(
+        "WHEN",
+        $.predicate,
+        "THEN",
+        $.substitution
+      )),
+      optional(seq(
+        "ELSE",
+        $.substitution
+      )),
+      "END"
+    ),
+
+    case_substitution: $ => seq(
+      "CASE",
+      $.expression,
+      "OF",
+      "EITHER",
+      separated_seq(
+        ",",
+        $.simple_term
+      ),
+      "THEN",
+      $.substitution,
+      repeat(seq(
+        "OR",
+        separated_seq(
+          ",",
+          $.simple_term
+        ),
+        "THEN",
+        $.substitution
+      )),
+      optional(seq(
+        "ELSE",
+        $.substitution
+      )),
+      "END",
+      "END"
+    ),
+
+    any_substitution: $ => seq(
+      "ANY",
+      separated_seq(
+        ",",
+        $.ident
+      ),
+      "WHERE",
+      $.predicate,
+      "THEN",
+      $.substitution,
+      "END"
+    ),
+
+    let_substitution: $ => seq(
+      "LET",
+      separated_seq(
+        ",",
+        $.ident
+      ),
+      "BE",
+      separated_seq(
+        "&",
+        seq(
+          $.ident,
+          "=",
+          $.expression
+        )
+      ),
+      "IN",
+      $.substitution,
+      "END"
+    ),
+
+    becomes_elt_substitution: $ => seq(
+      separated_seq(
+        ",",
+        separated_seq(
+          ".",
+          $.ident
+        )
+      ),
+      "::",
+      $.expression
+    ),
+
+    becomes_such_that_substitution: $ => seq(
+      separated_seq(
+        ",",
+        separated_seq(
+          ".",
+          $.ident
+        )
+      ),
+      ":",
+      "(",
+      $.predicate,
+      ")"
+    ),
+
+    var_substitution: $ => seq(
+      "VAR",
+      separated_seq(
+        ",",
+        $.ident
+      ),
+      "IN",
+      $.substitution,
+      "END"
+    ),
+
+    sequence_substitution: $ => seq(
+      $.substitution,
+      ";",
+      $.substitution
+    ),
+
+    call_up_substitution: $ => seq(
+      optional(seq(
+        separated_seq(
+          ",",
+          separated_seq(
+            ".",
+            $.ident
+          )
+        ),
+        "<--"
+      )),
+      separated_seq(
+        ".",
+        $.ident
+      ),
+      optional(seq(
+        "(",
+        separated_seq(
+          ",",
+          $.expression
+        ),
+        ")"
+      ))
+    ),
+
+    while_substitution: $ => seq(
+      "WHILE",
+      $.condition,
+      "DO",
+      $.instruction,
+      "INVARIANT",
+      $.predicate,
+      "VARIANT",
+      $.expression,
+      "END"
+    ),
+
+    simultaneous_substitution: $ => seq(
+      $.substitution,
+      "||",
+      $.substitution
+    ),
+
+    // Useful syntax rule
+    list_ident: $ => choice(
+      $.ident,
+      seq(
+        "(",
+        separated_seq(
+          ",",
+          $.ident
+        ),
+        ")"
+      )
+    ),
+
+    ident: _ => /[a-zA-Z_]+/,
+
+    integer_literal: _ => /[0-9]+/,
+
+    string_lit: _ => /\"[^"]*\"/,
   }
 });
 
