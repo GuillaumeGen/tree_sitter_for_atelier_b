@@ -2,15 +2,31 @@
 module.exports = grammar({
   name: 'B_language',
 
+  extras: $ => [
+    $.comment,
+    /\s|\\n/,
+  ],
+
   rules: {
 
     source_file: $ => $.component,
 
-    ident: _ => /[a-zA-Z_]+/,
+    ident: _ => /[a-zA-Z_][a-zA-Z_0-9]*/,
+
+    filename: _ => /[<"][a-zA-Z_\-\.0-9]+[>"]/,
 
     integer_literal: _ => /[0-9]+/,
 
     string_lit: _ => /\"[^"]*\"/,
+
+    comment: _ => token(seq(
+      '/*',
+      repeat(choice(
+        /[^\*]/,
+        /\*[^\/]/
+      )),
+      '*/'
+    )),
 
     // Initial axiom
     component: $ => choice(
@@ -65,6 +81,7 @@ module.exports = grammar({
     ),
 
     predicate: $ => choice(
+      prec.left(5, $.ident),
       seq(
         "(",
         $.predicate,
@@ -178,6 +195,12 @@ module.exports = grammar({
 
     // Expressions
     expression: $ => choice(
+      $.secondary_expression,
+      $.parallel_product,
+      $.composition
+    ),
+
+    secondary_expression: $ => choice(
       $.expression_primary,
       $.expression_boolean,
       $.arithmetical_expression,
@@ -192,7 +215,7 @@ module.exports = grammar({
     ),
 
     expression_primary: $ => choice(
-      $.data,
+      prec.left(7, $.data),
       $.expr_bracketed
     ),
 
@@ -230,6 +253,7 @@ module.exports = grammar({
     ),
 
     arithmetical_expression: $ => choice(
+      prec.left(6, $.data),
       $.integer_lit,
       prec.left(180,seq(
         $.arithmetical_expression,
@@ -451,9 +475,7 @@ module.exports = grammar({
       $.reverse,
       $.first_projection,
       $.second_projection,
-      $.composition,
       $.direct_product,
-      $.parallel_product,
       $.iteration,
       $.reflexive_closure,
       $.closure,
@@ -904,7 +926,8 @@ module.exports = grammar({
       $.clause_invariant,
       $.clause_assertions,
       $.clause_initialization,
-      $.clause_operations
+      $.clause_operations,
+      $.clause_definitions
     ),
 
     implementation: $ => seq(
@@ -928,7 +951,8 @@ module.exports = grammar({
       $.clause_invariant,
       $.clause_assertions,
       $.clause_initialization_B0,
-      $.clause_operations_B0
+      $.clause_operations_B0,
+      $.clause_definitions
     ),
 
     clause_promotes: $ => seq(
@@ -1182,11 +1206,6 @@ module.exports = grammar({
       )
     ),
 
-    clause_initialization_B0: $ => seq(
-      "INITIALISATION",
-      $.instruction
-    ),
-
     clause_operations_B0: $ => seq(
       "OPERATIONS",
       separated_seq(
@@ -1203,7 +1222,7 @@ module.exports = grammar({
 
     // Terms and groups of expressions
     term: $ => choice(
-      $.simple_term,
+      $.boolean_lit,
       seq(
         separated_seq(
           ".",
@@ -1243,9 +1262,9 @@ module.exports = grammar({
 
     // Substitutions
     substitution: $ => choice(
-      $.level1_substitution,
       $.sequence_substitution,
-      $.simultaneous_substitution
+      $.simultaneous_substitution,
+      $.level1_substitution
     ),
 
     operation: $ => seq(
@@ -1356,7 +1375,7 @@ module.exports = grammar({
           ",",
           $.ident
         ),
-        "<-"
+        "<--"
       )),
       separated_seq(
         ".",
@@ -1409,13 +1428,13 @@ module.exports = grammar({
       $.while_substitution
     ),
 
-    sequence_substitution: $ => prec.left(1, seq(
+    sequence_substitution: $ => prec.left(100, seq(
       $.substitution,
       ";",
       $.substitution
     )),
 
-    simultaneous_substitution: $ => prec.left(1, seq(
+    simultaneous_substitution: $ => prec.left(100, seq(
       $.substitution,
       "||",
       $.substitution
@@ -1549,7 +1568,7 @@ module.exports = grammar({
     ),
 
     becomes_equal_substitution: $ => choice(
-      seq(
+      prec.left(200, seq(
         separated_seq(
           ",",
           separated_seq(
@@ -1558,12 +1577,9 @@ module.exports = grammar({
           )
         ),
         ":=",
-        separated_seq(
-          ",",
-          $.expression
-        )
-      ),
-      seq(
+        $.secondary_expression
+      )),
+      prec.left(200, seq(
         separated_seq(
           ".",
           $.ident
@@ -1575,8 +1591,8 @@ module.exports = grammar({
         ),
         ")",
         ":=",
-        $.expression
-      )
+        $.secondary_expression
+      ))
     ),
 
     precondition_substitution: $ => seq(
@@ -1767,8 +1783,8 @@ module.exports = grammar({
     clause_definitions: $ => seq(
       "DEFINITIONS",
       separated_seq(
-        $.definition,
-        ";"
+        ";",
+        $.definition
       )
     ),
 
@@ -1784,23 +1800,13 @@ module.exports = grammar({
             ),
             ")"
           )
+        ),
+        "==",
+        choice(
+          $.predicate
         )
       ),
-      seq(
-        "<",
-        $.filename,
-        ">"
-      ),
-      seq(
-        '"',
-        $.filename,
-        '"'
-      )
-    ),
-
-    filename: $ => seq(
-      $.ident,
-      ".def"
+      $.filename
     )
   }
 });
