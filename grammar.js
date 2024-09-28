@@ -1406,7 +1406,8 @@ module.exports = grammar({
       $.if_instruction,
       $.case_instruction,
       $.assert_instruction,
-      $.while_substitution
+      $.while_substitution,
+      $.becomes_such_that_instruction
     ),
 
     level1_substitution: $ => choice(
@@ -1474,7 +1475,7 @@ module.exports = grammar({
             $.ident
           )
         ),
-        "<-"
+        "<--"
       )),
       separated_seq(
         ".",
@@ -1728,6 +1729,24 @@ module.exports = grammar({
       ),
       "::",
       $.expression
+    ),
+
+    becomes_such_that_instruction: $ => seq(
+      separated_seq(
+        ".",
+        $.ident
+      ),
+      ":",
+      "(",
+      prec.left(60, seq(
+        separated_seq(
+          ".",
+          $.ident
+        ),
+        ":",
+        $.expression
+      )),
+      ")"
     ),
 
     becomes_such_that_substitution: $ => seq(
